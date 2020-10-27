@@ -1,0 +1,120 @@
+---
+title: "personal assignment 1"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r}
+#student ID: 474084
+#student name: Yiqing Zhang
+
+#(a)
+library(MASS)
+?Boston
+nrow(Boston)
+ncol(Boston)
+head(Boston)
+#There are 14 columns and 506 rows. 
+#And the rows represent 506 different suburbs in Boston, and the columns represent 14 different 
+#features of every area,which are as follows.
+
+#crim:per capita crime rate by town.
+#zn:proportion of residential land zoned for lots over 25,000 sq.ft.
+#indus:proportion of non-retail business acres per town.
+#chas:Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+#nox:nitrogen oxides concentration (parts per 10 million).
+#rm:average number of rooms per dwelling.
+#age:proportion of owner-occupied units built prior to 1940.
+#dis:weighted mean of distances to five Boston employment centres.
+#rad:index of accessibility to radial highways.
+#tax:full-value property-tax rate per \$10,000.
+#ptratio:pupil-teacher ratio by town.
+#black:1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+#lstat:lower status of the population (percent).
+#medv:median value of owner-occupied homes in \$1000s.
+```
+
+
+```{r}
+#(b)
+pairs(Boston)
+pairs(~nox+rm+dis+lstat+medv,Boston)
+#According to the scatterpoint graphs, there might be a negative correlation between nox and dis; 
+#lstat and medv. There might be a positive correlation between medv and rm.
+```
+```{r}
+#(c)
+pairs(Boston)
+pairs(~age+dis+crim,Boston)
+
+# According to the scatterplot graphs,the age and the distance of them are associated with
+#the crime rate. When the proportion of owner-occupied units built prior 
+#to 1940 goes up to a certain number, the crime rate also goes up rapidly. 
+#Also, when the weighted mean of distances to five Boston employment 
+#centers is very small, the crime rate is extremely high, when the
+#distances goes up, the crime rate almost becomes a line at a low value.
+
+```
+
+
+```{r}
+#(d)
+sapply(Boston[,c(1,10,11)],range)
+
+#There is a surburb having extremely high crime rate than
+#others in Boston, which reaches 88.97.
+#And the range of tax rate is 187 to 711,
+#the pupil-teacher ratio can be up to 22, compared to 
+#the lowest 12.6.
+```
+
+
+```{r}
+#(e)
+library(dplyr)
+chas_river=filter(Boston,chas==1)
+nrow(chas_river)
+#There are 35 suburbs bond the Charles river.
+```
+
+
+
+```{r}
+#(f)
+attach(Boston)
+median(ptratio)
+#The median of pupil-teacher ratio by town is 19.05.
+```
+```{r}
+#(g)
+library(lubridate)
+library(dplyr)
+min(medv)
+medv_low=Boston[medv==5,]
+medv_low
+summary(Boston)
+
+#suburb 399 and 406 have the lowest median value of 
+#owner-occupied homes in $1000.
+#and other predictors of suburb 399 and 406 show that these 
+#two suburbs have higher crime rates, and higher proportion of 
+#old houses and non-retail business acres per town. those suburbs 
+#have rather high proportion of blacks by town and lower status of
+#the population.
+```
+
+
+```{r}
+
+nrow(filter(Boston,rm>7))
+nrow(filter(Boston,rm>8))
+rm_high=Boston[rm>8,]
+rm_high
+
+#There are 64 suburbs having average number of rooms per 
+#dwelling more than 7, and 13 suburbs more than 8.
+#The suburbs with average number more than 8 are 98,164,05,225,226,227,233,234,254,258
+
+
+```
+

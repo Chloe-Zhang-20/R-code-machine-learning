@@ -1,0 +1,163 @@
+---
+title: "personal assianment3"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#(a)
+library(ISLR)
+attach(Weekly)
+na.omit(Weekly)
+?Weekly
+cor(Weekly[-1,-9])
+summary(Weekly)
+pairs(Weekly)
+plot(Volume~Year)
+
+```
+ 
+
+#According to the results, The change of volume seems correlative with Year, and there is a pattern under Direction and Today from the plot figures.
+
+
+```{r}
+#(b)
+?glm
+
+glm_fit=glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume,data=Weekly,family=binomial)
+summary(glm_fit)
+
+```
+#According to the results, the only statistically significant variable is Lag2, and the significant level is 5%.
+
+```{r}
+#(c)
+glm.prob=predict(glm_fit,type="response")
+dim(Weekly)
+contrasts(Direction)
+glm.pred=rep("Down",1089)
+glm.pred[glm.prob>0.5]="Up"
+length(Direction)
+table(glm.pred,Direction)
+mean(glm.pred==Direction)
+
+```
+#From the confusion matrix, we can see that the logistic prediction is only correct on 54 "Down" out of 484 real direction result.Similarly, the prediction shows there are 430 "Up" rather than "Down" in the real Direction. But the prediction has higher accuracy rate when it predicts "Up" than "Down". According to the mean function result, the total accuracy rate is about 56%, which means the prediction is only as accurate as the coin toss.
+
+
+```{r}
+#(d)
+train=(Year<2009)
+dim(Weekly[train,])
+test=Weekly[!train,]
+dim(test)
+
+glm_fit2=glm(Direction~Lag2,data=Weekly,family=binomial,subset=train)
+glm.prob2=predict(glm_fit2,test,type="response")
+
+glm.pred2=rep("Down",104)
+glm.pred2[glm.prob2>0.5]="Up"
+
+table(glm.pred2,test$Direction)
+mean(glm.pred2==test$Direction)
+```
+#From the result above, the accuracy rate is 62.5%
+```{r}
+#(e)
+library(MASS)
+
+lda.fit=lda(Direction~Lag2,data=Weekly,subset=train)
+lda.pred=predict(lda.fit,test)
+lda.class=lda.pred$class
+lda.class
+
+table(lda.class,test$Direction)
+mean(lda.class==test$Direction)
+```
+#From the result above, the accuracy rate is 62.5%
+
+```{r}
+#(g)
+
+library(class)
+train.x=Lag2[train]
+test.x=Lag2[!train]
+
+Direction.train=Direction[train]
+Direction.test=Direction[!train]
+
+set.seed(100)
+knn.pred=knn(data.frame(train.x),data.frame(test.x),Direction.train,k=1)
+knn.pred
+
+table(knn.pred,Direction.test)
+mean(knn.pred==Direction.test)
+```
+#From the result above, the accuracy rate is 50.7%
+
+
+```{r}
+#(h)
+#According to the results of confusion matrix and accuracy rate, 
+#the lda and logistic methods have the best results, both of which 
+#have 62.5% accuracy rates.
+```
+
+
+```{r}
+#(i)
+
+#if k=10,use knn method
+set.seed(100)
+knn.pred2=knn(data.frame(train.x),data.frame(test.x),Direction.train,k=10)
+table(knn.pred2,Direction.test)
+mean(knn.pred2==Direction.test)
+#The accuracy rate is about 57%
+
+
+#if k=1, add 2 predictors, use knn method
+set.seed(100)
+train.x2=cbind(Lag2,Today,Volume)[train,]
+test.x2=cbind(Lag2,Today,Volume)[!train,]
+knn.pred3=knn(data.frame(train.x2),data.frame(test.x2),Direction.train,k=1)
+table(knn.pred3,Direction.test)
+mean(knn.pred3==Direction.test)
+#The accuracy rate is about 91.3%
+
+
+#use lda method, add other predictors and interactions.
+lda.fit2=lda(Direction~Lag2+Today+Volume+Year+Lag2*Today+Volume*Year,data=Weekly,subset=train)
+
+lda.pred2=predict(lda.fit2,test)
+lda.class2=lda.pred2$class
+
+table(lda.class2,test$Direction)
+mean(lda.class2==test$Direction)
+#The accuracy rate is about 92.3%
+
+
+#use logistic method, add other predictors and interactions.
+glm_fit3=glm(Direction~Lag2+Volume+Year,data=Weekly,family=binomial,subset=train)
+glm.prob3=predict(glm_fit2,test,type="response")
+
+glm.pred3=rep("Down",104)
+glm.pred3[glm.prob2>0.5]="up"
+table(glm.pred3,test$Direction)
+mean(glm.pred3==test$Direction)
+#The logistic method does not fit well when there are multiple
+#predictors, the accuracy rate is rather low, which is only 16%.
+
+
+
+#According to the results above, the best regression is using lda
+#method with four predictors and 2 interactions. 
+
+
+```
+

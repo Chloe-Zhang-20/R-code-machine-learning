@@ -1,0 +1,88 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+set.seed(1)
+train=sample(1:nrow(Boston),nrow(Boston)/2)
+train.x=Boston[train,]
+test.x=Boston[-train,]
+```
+
+
+```{r}
+library(randomForest)
+set.seed(1)
+
+bag.boston = randomForest(crim~., data=Boston, subset=train, mtry=13, importance=TRUE)
+yhat.bag = predict(bag.boston, newdata = test.x)
+mean((yhat.bag-test.x$crim)^2)
+plot(yhat.bag,test.x$crim)
+```
+
+
+```{r}
+set.seed(1)
+rf.boston=randomForest(crim~., data=Boston, subset=train, mtry=6, importance=TRUE)
+yhat.rf=predict(rf.boston,newdata=test.x)
+mean((yhat.rf-test.x$crim)^2)
+
+
+```
+
+
+```{r}
+library(gbm)
+set.seed(2)
+boost.boston=gbm(crim~.,train.x,distribution="gaussian",n.trees=5000,interaction.depth=4,shrinkage=0.2,verbose=F)
+yhat.boost=predict(boost.boston,newdata=test.x,n.trees=5000)
+mean((yhat.boost-test.x$crim)^2)
+```
+
+
+```{r}
+lm.boston=lm(crim~.,Boston,subset=train)
+yhat.lm=predict(lm.boston,test.x)
+mean((yhat.lm-test.x$crim)^2)
+```
+
+
+```{r}
+#change shrinkage
+na.omit(Boston)
+na.omit(crim)
+
+set.seed(1)
+k=10
+folds=sample(1:k,nrow(Boston),replace=T)
+cv.error=matrix(NA,k,100,dimnames=list(NULL,paste(1:100)))
+
+
+```
+
+
+```{r}
+for (j in 1:k){
+  for (i in 1:100){
+  cvboost.boston=gbm(crim~.,data=train.x[folds!=j,],distribution="gaussian",n.trees=500,
+                     interaction.depth=6,shrinkage=i*0.01,verbose=F)
+  yhat.cv=predict(cvboost.boston,newdata=train.x[folds==j,],n.trees=500)
+  cv.error[j,i]=mean((yhat.cv-train.x$crim[folds==j,])^2)
+  }
+}
+```
+
+
+```{r}
+mean.cv.error = apply(cv.error,2,mean)
+mean.cv.error
+which.min(mean.cv.error)
+
+```
+

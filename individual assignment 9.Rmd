@@ -1,0 +1,139 @@
+---
+title: "individual assignment"
+output:
+  pdf_document: default
+  html_document: default
+---
+student ID:474084
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+(a)
+
+```{r}
+library(ISLR)
+attach(OJ)
+set.seed(1)
+train=sample(1:nrow(OJ),800)
+train.x=OJ[train,]
+test.x=OJ[-train,]
+```
+
+(b)
+```{r}
+library(e1071)
+svm.fit=svm(Purchase~.,data=train.x, kernel = "linear", cost=0.01,scale = FALSE)
+summary(svm.fit)
+```
+
+According to the result of summary, we can see that there are 615 support vectors. And there are 309 from class CH and 306 from class MM.
+
+
+(c)
+```{r}
+train.pred=predict(svm.fit,train.x)
+test.pred=predict(svm.fit,test.x)
+
+table(predict=train.pred,truth=train.x$Purchase)
+mean(train.pred!=train.x$Purchase)
+
+table(predict=test.pred,truth=test.x$Purchase)
+mean(test.pred!=test.x$Purchase)
+```
+
+The training error rate is 0.2125 and the test error rate is 0.23333.
+
+
+(d)
+```{r}
+set.seed(2)
+tune.out=tune(svm,Purchase~.,data = train.x, kernel = "linear", ranges = list(cost = c(10^seq(-2, 1, by = 0.25))))
+summary(tune.out)
+bestmod=tune.out$best.model
+
+```
+In this chunk, we can see that the optimal cost is 1.77827941	, which brings the lowest error 0.16750.
+
+
+
+
+(e)
+```{r}
+ypred.train=predict(bestmod,train.x)
+table(predict=ypred.train,truth=train.x$Purchase)
+mean(ypred.train!=train.x$Purchase)
+
+ypred.test=predict(bestmod,test.x)
+table(predict=ypred.test,truth=test.x$Purchase)
+mean(ypred.test!=test.x$Purchase)
+```
+
+After changing cost to the tuned model, we can see that the train and test error rates are 0.16375 and 0.1518519 respectively. Both of the error rates are decreasing.
+
+
+(f)using "radial"
+```{r}
+#step 1
+svm.machine=svm(Purchase~.,data=train.x, kernel = "radial", cost=0.01,scale = FALSE)
+summary(svm.machine)
+
+train.pred2=predict(svm.machine,train.x)
+test.pred2=predict(svm.machine,test.x)
+
+mean(train.pred2!=train.x$Purchase)
+mean(test.pred2!=test.x$Purchase)
+#step 2
+set.seed(10)
+tune.out2=tune(svm,Purchase~.,data = train.x, kernel = "radial", ranges = list(cost = c(10^seq(-2, 1, by = 0.25))))
+summary(tune.out2)
+bestmod2=tune.out2$best.model
+tune.out2$best.parameters
+
+#step  3
+ypred.train2=predict(bestmod2,train.x)
+mean(ypred.train2!=train.x$Purchase)
+
+ypred.test2=predict(bestmod2,test.x)
+mean(ypred.test2!=test.x$Purchase)
+```
+
+After using "radial" with default gamma, we can see that there are 642 support vectors and 327 of them are CH, 315 of them are MM.
+The training and test error rates before tuned is 0.39375 and 0.3777778. The best model from tune.out has the cost of 0.56234133, which produces error of 0.17000. After tuning, the error rates are 0.14875 and  0.1777778.
+
+
+
+
+
+(g)using " polynomial"
+```{r}
+#step 1
+svm.poly=svm(Purchase~., data = train.x, kernel ="polynomial", degree = 2, cost = 0.01,scale = FALSE)
+summary(svm.poly)
+train.pred3=predict(svm.poly,train.x)
+test.pred3=predict(svm.poly,test.x)
+
+mean(train.pred3!=train.x$Purchase)
+mean(test.pred3!=test.x$Purchase)
+
+#step 2
+set.seed(100)
+tune.out3=tune(svm,Purchase~.,data = train.x, kernel = "polynomial", degree = 2,ranges = list(cost = c(10^seq(-2, 1, by = 0.25))))
+bestmod3=tune.out3$best.model
+summary(tune.out3)
+
+#step  3
+ypred.train3=predict(bestmod3,train.x)
+mean(ypred.train3!=train.x$Purchase)
+
+ypred.test3=predict(bestmod3,test.x)
+mean(ypred.test3!=test.x$Purchase)
+
+
+
+```
+After using "polynomial" with degree=2, we can see that there are 333 support vectors and 166 of them are CH, 167 of them are MM.
+The training and test error rates before tuned is 0.165 and 0.1592593. The best model from tune.out has the cost of 10, which produces error of 0.17375. After tuning, the error rates are 0.15 and 0.1888889.
+
+
+(h)
+We can find that compared with error rates, the SVM with "polynomial" has the best results before tuning. And after tuning, the SVM with "radial" method has lower test error rate of 0.1777778.

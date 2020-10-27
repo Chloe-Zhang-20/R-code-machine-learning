@@ -1,0 +1,120 @@
+---
+title: "individual assignment 5"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+student id: 474084
+```{r}
+#(a)
+set.seed(1)
+x=rnorm(100)
+noise=rnorm(100)
+```
+In this chunk, I generate a predictor x and noise vector by  rnorm() function.
+
+```{r}
+#(b)
+
+y=10+3*x+4*x^2+5*x^3+noise
+
+```
+In this chunk, I choose intercept as 10 and the three coefficients for x to x^3 are 3,4,5 respectively.
+
+```{r}
+#(c)
+library(leaps)
+newdata=data.frame(cbind(x,y))
+newdata=data.frame(cbind(y,poly(x,10)))
+
+regfit.best=regsubsets(y~.,data=newdata,nvmax=10)
+reg.summary=summary(regfit.best)
+names(reg.summary)
+
+#check with adjusted R square
+which.max(reg.summary$adjr2)
+plot(reg.summary$adjr2,xlab="number of predictors",ylab="adjusted RSq",type="l")
+points(5,reg.summary$adjr2[5],col="red",cex=2,pch=20)
+
+coef(regfit.best,id=5)
+
+
+#check with bic
+which.min(reg.summary$bic)
+plot(reg.summary$adjr2,xlab="number of predictors",ylab="bic",type="l")
+points(3,reg.summary$adjr2[3],col="red",cex=2,pch=20)
+coef(regfit.best,id=3)
+
+#check with cp
+which.min(reg.summary$cp)
+plot(reg.summary$cp,xlab="number of predictors",ylab="cp",type="l")
+points(4,reg.summary$adjr2[3],col="red",cex=2,pch=20)
+coef(regfit.best,id=4)
+
+
+
+```
+In this chunk, we can see that, from Cp, the best model is with 4 predictors, the coefficients are 14.584237 for intercept, 140.267685 for X1, 59.466313 for X2, 75.130049 for X3, 1.480188 for X5.
+
+From BIC, the best model is with 3 predictors.The coefficients are 14.58424 for intercept,  140.26769 for x1, 59.46631 for x2,75.13005 for x3. 
+
+And from adjusted r square, the best model is with 5 predictors, which can be proved by the plot after that. The coefficients are  14.584237  for intercept, 140.267685 for x1, 59.466313 for x2, 75.130049 for x3, 1.257095 for x4, 1.480188  for x5.
+
+```{r}
+#(d)
+#using forward stepwise selection
+forward.fit=regsubsets(y~.,data=newdata,nvmax=10,method="forward")
+summary.fwd=summary(forward.fit)
+
+#check with adjusted R square
+which.max(summary.fwd$adjr2)
+plot(summary.fwd$adjr2,xlab="number of predictors",ylab="adjusted RSq",type="l")
+points(5,summary.fwd$adjr2[5],col="red",cex=2,pch=20)
+
+coef(forward.fit,id=5)
+
+
+#check with bic
+which.min(summary.fwd$bic) 
+plot(summary.fwd$adjr2,xlab="number of predictors",ylab="bic",type="l")
+points(3,summary.fwd$adjr2[3],col="red",cex=2,pch=20)
+coef(forward.fit,id=3)
+
+#check with cp
+which.min(summary.fwd$cp)
+plot(summary.fwd$cp,xlab="number of predictors",ylab="cp",type="l")
+points(4,summary.fwd$adjr2[3],col="red",cex=2,pch=20)
+coef(forward.fit,id=4)
+```
+From the results above, we can find that the best model chosen by forward stepwise method is the same with best subset selection. The coefficients for every predictor and intercept are the same with the results.
+
+```{r}
+#using backwards stepwise selection
+backward.fit=regsubsets(y~.,data=newdata,nvmax=10,method="backward")
+summary.bwd=summary(backward.fit)
+
+#check with adjusted R square
+which.max(summary.bwd$adjr2)
+plot(summary.bwd$adjr2,xlab="number of predictors",ylab="adjusted RSq",type="l")
+points(5,summary.bwd$adjr2[5],col="red",cex=2,pch=20)
+
+coef(backward.fit,id=5)
+
+
+#check with bic
+which.min(summary.bwd$bic) 
+plot(summary.bwd$adjr2,xlab="number of predictors",ylab="bic",type="l")
+points(3,summary.bwd$adjr2[3],col="red",cex=2,pch=20)
+coef(backward.fit,id=3)
+
+#check with cp
+which.min(summary.bwd$cp)
+plot(summary.bwd$cp,xlab="number of predictors",ylab="cp",type="l")
+points(4,summary.bwd$adjr2[3],col="red",cex=2,pch=20)
+coef(backward.fit,id=4)
+```
+From the results above, compared with the results from best subset selection and forward stepwise selection, the best model and coefficients chosen by backward stepwise method are the same.

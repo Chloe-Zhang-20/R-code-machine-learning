@@ -1,0 +1,110 @@
+---
+title: "personal assignment 2"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+#(a)
+library(ISLR)
+attach(Carseats)
+?Carseats
+na.omit(Carseats)
+lm.fit=lm(Sales~Price+Urban+US)
+# As above, lm.fit is a multiple regression model of sales and three predictors.
+```
+
+
+```{r}
+#(b)
+summary(lm.fit)
+contrasts(US)
+contrasts(Urban)
+
+#According to the results, the coefficient for price is -0.054459,and the 
+#p-value is smaller than the significance level we chose to prove it is 
+#statistically significant. The number means that when the prices increase
+#an unit, the sales of the carseats for chirldren will decrease 0.054459.  
+#And the coefficients for the two qualitative predictors,which are Urban and US, 
+#are -0.021916 and 1.200573 repectively. R automatically make these 
+#two qualitative predictors as dummy variables, which we can know by contrasts() function.
+#Therefore, the sales will decrease if the store is in 
+#the urban area. And the sale of stores in rural area is the baseline.
+#However, this correlation is not significant according to the p-value. 
+#Similarly, the sales will increase if the stores are in the US, 
+#and the sales outside the US are the baseline. This correlation is 
+#significant from the results.
+```
+
+
+```{r}
+#(C)
+#Sales=13.043469 - 0.054459*Price - 0.021916*Urban + 1.200537*US
+#(The urban=1 if the stores are in the urban areas,otherwise it equals to 0; 
+#The US=1 if the stores are in the US, otherwise it equals to 0)
+
+
+```
+
+
+```{r}
+#(d)
+summary(lm.fit)
+# According to the results, price and us are statistically significant. 
+#Because the p-values and t-value are smaller than the signifance level,
+#so we can deny the null hypothesis and accept the alternative hypothesis.
+
+
+```
+
+
+```{r}
+#(e)
+lm.fit2=lm(Sales~Price+US,data=Carseats)
+#the lim.fit2 is the new smaller model, which only uses the 
+#significant predictors.
+```
+
+
+```{r}
+#(f)
+par(mfrow=c(2,2))
+plot(lm.fit)
+plot(lm.fit2)
+anova(lm.fit,lm.fit2)
+#According to the results above, we can conclude that, generally,
+#both of these two models fit well, but have high-leverage and outlier problem 
+#according to the plots.
+#And compared between these two models, the difference is small but the 
+#latter one might fit better because the R-squre is a little bigger,so 
+#as anova function shows.
+```
+
+
+```{r}
+#(g)
+confint(lm.fit2)
+```
+
+
+```{r}
+#(h)
+par(mfrow=c(2,2))
+plot(lm.fit2)
+par(mfrow=c(1,1))
+plot(hatvalues(lm.fit2))
+
+#According to the plots, we can see that these are outliers and high-leverage 
+#problems in the model lm.fit2.
+#In the Residuals vs Leverage plot we can see the high-leverage point 368 
+#which has a extremely big x value. Also, in the hatvalue plots,and 
+#Residuals vs fitted plots we can see the points with very big Y value, 
+#including 69, 377, 51 , are outliers.
+
+```
+
+

@@ -1,0 +1,57 @@
+---
+title: "Individual assignment 7"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Student ID:474084, Yiqing Zhang
+```{r}
+library(ISLR)
+attach(Carseats)
+```
+
+#a
+```{r}
+set.seed(100)
+train=sample(1:nrow(Carseats),nrow(Carseats)/2)
+car.train=Carseats[train,]
+car.test=Carseats[-train,]
+```
+In this chunck, I split the data set into two part by the sample function. And split it to train and test data according to the row number of Carseats.
+
+
+#b
+```{r}
+library(tree)
+set.seed(100)
+car.tree=tree(Sales~.,car.train)
+car.pred=predict(car.tree,car.test)
+summary(car.tree)
+
+plot(car.tree)
+text(car.tree,pretty=0)
+tmse=mean((car.test$Sales-car.pred)^2)
+tmse
+```
+In this chunck, the tree model uses 6 predictors and 17 nodes. The Test MSE is 5.395751. For example,in this plot, if the Shelveloc is good and price is bigger than or equal to 137.5, the mean of sales would be 7.262 according to the tree model.
+
+
+#c
+```{r}
+set.seed(100)
+treecv=cv.tree(car.tree)
+treecv
+which.min(treecv$dev)
+plot(treecv$size,treecv$dev,type="b")
+
+car.prune=prune.tree(car.tree,best=13)
+ycar=predict(car.prune,car.test)
+mean((car.test$Sales-ycar)^2)
+
+```
+In this chunck, I use cross validation to decide that the optimal nodes of this tree model are 13, which has the least training MSE. And the pruned model's Test MSE is 5.39241. And the Test MSE of this pruned model is slightly better than original model.

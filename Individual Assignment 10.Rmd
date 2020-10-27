@@ -1,0 +1,109 @@
+---
+title: "Individual Assignment 10"
+author: "Lin Xie"
+date: "11/16/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. Fit neural network model with 5 hidden layer.
+```{r}
+library(neuralnet)
+library(nnet)
+library(caret)
+df = read.csv('EastWestAirlinesNN.csv')
+#View(df)
+#summary(df)
+dim(df)
+#str(df)
+var = c('Topflight','Balance','Qual_miles','cc1_miles.','cc2_miles.','cc3_miles.','Bonus_miles','Bonus_trans','Flight_miles_12mo','Flight_trans_12','Online_12','Email','Club_member','Any_cc_miles_12mo')
+df = df[,c('Phone_sale',var)]
+balance = df[,'Phone_sale']
+max_phone_sale = range(df['Phone_sale'])[2]
+min_phone_sale = range(df['Phone_sale'])[1]
+
+```
+
+convert categorical variables into dummies
+```{r}
+summary(df)
+#Online_12 has very few values among, thus it is very likely to be a categorical variable.
+online = colnames(class.ind(df$Online_12))
+df = cbind(df, class.ind(df$Online_12))
+names(df) = c('Phone_sale', var, paste('Online_12_', online, sep = ''))
+df = subset(df, select = -c(Online_12))
+df = na.omit(df)
+df
+```
+
+scale numerical predictor variables to a 0-1.
+```{r}
+numerical = c('Balance', 'Bonus_miles', 'Bonus_trans', 'Flight_miles_12mo', 'Flight_trans_12', 'Qual_miles')
+norm = preProcess(df[, numerical], method = 'range')
+df[, numerical] = predict(norm, df[, numerical])
+```
+
+training and validation data
+```{r}
+set.seed(1)
+train = sample(nrow(df), nrow(df)/2)
+validation = setdiff(row.names(df),train)
+```
+
+neural network model with 1 hidden layer and 5 nodes
+```{r}
+set.seed(1)
+f = as.formula(paste('Phone_sale~', paste(names(df)[!names(df) %in% c('Phone_sale')], collapse = '+')))
+nn = neuralnet(Phone_sale~., data = df[train,], linear.output = F, hidden = 5)
+```
+
+```{r}
+plot(nn,rep='best')
+nn$weights
+```
+lift chart
+```{r}
+library(gains)
+set.seed(1)
+val.train = predict(nn,newdata = df[train,])
+pred.train = ifelse(val.train>0.5,1,0)
+val.validation = predict(nn,newdata = df[validation,])
+pred.validation = ifelse(val.validation>0.5,1,0)
+
+table(predict = pred.train, true = df[train,]$Phone_sale)
+table(predict = pred.validation, true = df[validation,]$Phone_sale)
+
+gain.train = gains(df[train,]$Phone_sale, val.train)
+barplot(gain.train$mean.resp/mean(df[train,]$Phone_sale),names.arg = gain.train$depth, xlab = 'Percentile', ylab = 'Mean Response', main = 'Decile-wise lift chart')
+
+gain.validation = gains(df[validation,]$Phone_sale, val.validation)
+barplot(gain.validation$mean.resp/mean(df[validation,]$Phone_sale),names.arg = gain.validation$depth, xlab = 'Percentile', ylab = 'Mean Response', main = 'Decile-wise lift chart')
+#The leftmost bar of the validation decile-wise lift chart states the top 10% decile, the model is more than 1.5 times as likely to identify the important class comparing to the average method. 
+``` 
+
+1 hidden node model
+```{r}
+nn1 = neuralnet(Phone_sale~., data = df[train,], linear.output = F, hidden = 1)
+```
+
+```{r}
+set.seed(1)
+val.train1 = predict(nn1,newdata = df[train,])
+pred.train1 = ifelse(val.train1>0.5,1,0)
+val.validation1 = predict(nn1,newdata = df[validation,])
+pred.validation1 = ifelse(val.validation1>0.5,1,0)
+
+table(predict = pred.train1, true = df[train,]$Phone_sale)
+table(predict = pred.validation1, true = df[validation,]$Phone_sale)
+
+gain.train1 = gains(df[train,]$Phone_sale, val.train1)
+barplot(gain.train1$mean.resp/mean(df[train,]$Phone_sale),names.arg = gain.train1$depth, xlab = 'Percentile', ylab = 'Mean Response', main = 'Decile-wise lift chart')
+
+gain.validation1 = gains(df[validation,]$Phone_sale, val.validation1)
+barplot(gain.validation1$mean.resp/mean(df[validation,]$Phone_sale),names.arg = gain.validation1$depth, xlab = 'Percentile', ylab = 'Mean Response', main = 'Decile-wise lift chart')
+```
+
+The test MSE for 1 hidden node model is about 0.1284 <-((306+14)/2493), and the test MSE for 5 hidden node model is about 0.1448 <- ((295+66)/2493). The model with more hidden nodes may overfit the data and cost the test MSE to increase. 

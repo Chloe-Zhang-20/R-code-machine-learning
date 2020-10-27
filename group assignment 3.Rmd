@@ -1,0 +1,149 @@
+---
+title: "Untitled"
+output: html_document
+---
+11
+#a
+```{r}
+Auto=read.csv('/Users/Rabbit/Desktop/Predictive Analytics/Auto.csv', header=T,na.strings = "?")
+Auto = na.omit(Auto)
+attach(Auto)
+median = median(mpg)
+mpg01 = rep(1, length(mpg))
+mpg01[mpg < median] = 0
+Auto = data.frame(cbind(mpg01, Auto))
+```
+
+#b
+```{r}
+attach(Auto)
+pairs(Auto)
+boxplot(weight~mpg01)
+boxplot(displacement~mpg01)
+boxplot(horsepower~mpg01)
+boxplot(acceleration~mpg01)
+boxplot(year~mpg01)
+boxplot(cylinders~mpg01)
+```
+From the scatterplot, we find the distributions of the value of mpg01 are not evenly with the value of displacement, horsepower, weight and acceleration.
+Next, through the boxplot, we find that the value of mpg01 is much related to the value of cylinders, displacement, horsepower and weight, like mpg01 has a negative correlationship with weight and displacement.
+
+#c
+```{r}
+set.seed(100)
+train = sample(nrow(Auto), nrow(Auto)/2, replace = FALSE)
+train.x = Auto[train,]
+test.x = Auto[-train,]
+```
+
+#d
+```{r}
+library(MASS)
+lda.fit = lda(mpg01 ~ weight + displacement + cylinders + horsepower, data = train.x)
+lda.pred = predict(lda.fit, test.x)
+lda.class = lda.pred$class
+mean(lda.class != test.x$mpg01)
+```
+The test error of the model obtained is 11.73%.
+
+#f
+```{r}
+glm.fit = glm(mpg01 ~ weight + displacement + cylinders + horsepower, data = train.x, family = binomial)
+glm.probs = predict(glm.fit, test.x, type = "response")
+glm.pred = rep("0", 196)
+glm.pred[glm.probs > 0.5] = "1"
+table(glm.pred, test.x$mpg01)
+mean(glm.pred != test.x$mpg01)
+```
+The test error of the model obtained is 10.20%.
+
+#g
+```{r}
+library(class)
+set.seed(100)
+train = sample(nrow(Auto), nrow(Auto)/2, replace = FALSE)
+mpg01.train = mpg01[train]
+mpg01.test = mpg01[-train]
+train1.x = cbind(weight,displacement,cylinders,horsepower)[train,]
+test1.x = cbind(weight,displacement,cylinders,horsepower)[-train,]
+knn.pred = knn(train1.x, test1.x, mpg01.train, k = 1)
+table(knn.pred, mpg01.test)
+mean(glm.pred != mpg01.test)
+```
+When k=1, the test error of the model obtained is 10.20%.
+
+```{r}
+for (i in 1:10) {
+   knn.pred = knn(train1.x, test1.x, mpg01.train, k = i)
+   test_error = mean(knn.pred != mpg01.test)
+   print(test_error)
+}
+```
+k=5 seems to perform the best on this data set.
+
+12
+#a
+```{r}
+Power = function(){
+  print(2 ^ 3)
+}
+Power()
+```
+
+#b
+```{r}
+Power2 = function(x,a){
+  print(x ^ a)
+}
+Power2(3,8)
+```
+
+#c
+```{r}
+Power2(10,3)
+Power2(8,17)
+Power2(131,3)
+```
+
+#d
+```{r}
+Power3 = function(x,a){
+  R = x ^ a
+  return(R)
+  }
+
+```
+
+#e
+```{r}
+plot(1:10, 
+     Power3(1:10,2), 
+     log = "x",
+     main = "y=x^2, log=x", 
+     xlab = "x", 
+     ylab = "y")
+```
+
+#f
+```{r}
+PlotPower = function(x,a){
+  plot(x, Power3(x,a), main = "y = x^a", xlab = "x", ylab = "y")
+}
+ PlotPower(1:10, 3)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

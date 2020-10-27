@@ -1,0 +1,47 @@
+---
+title: "individual assignment 11"
+output: pdf_document
+---
+student ID:474084
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+(a)
+```{r}
+library(ISLR) 
+attach(USArrests)
+
+set.seed(1)
+us.complete=hclust(dist(USArrests),method="complete")
+
+```
+
+(b)
+```{r}
+cutree(us.complete,3)
+plot(us.complete)
+```
+
+In this chunk, I cut the dendrogram at a height that results in three distinct clusters. The specific cluster of every state is shown in the plot.
+
+
+(c)
+```{r}
+sus=scale(USArrests)
+sus.complete=hclust(dist(sus),method="complete")
+cutree(sus.complete,3)
+plot(sus.complete)
+```
+
+In this chunk, I scale the variables to get the new clusters and plot it.
+
+
+(d)
+```{r}
+table(cutree(us.complete,3))
+table(cutree(sus.complete,3))
+table(cutree(us.complete, 3), cutree(sus.complete, 3))
+```
+
+Scaling influences the maximum height the dendrogram can obtain. Before scaling, the biggest height is more than 250, and after scaling, it is 6. Although the tree looks similar to some extent, the clusters are affected by the scaling. As for my opinion, it should use scaling, because the unit of every variable is different, therefore using scaling is more accurate.

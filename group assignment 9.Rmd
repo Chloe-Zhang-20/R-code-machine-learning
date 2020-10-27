@@ -1,0 +1,92 @@
+---
+title: "Group Assignment 9"
+output:
+  pdf_document: default
+  html_document: default
+---
+Student ID:474084,476397,474869,457942,473928
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+(a)
+```{r}
+set.seed(100)
+x1=runif (500) -0.5
+
+x2=runif (500) -0.5
+
+y=1*(x1^2-x2^2 > 0)
+```
+
+(b)
+```{r}
+plot(x=x1,y=x2,col=ifelse(y==0, "red", "blue"),xlab="x1",ylab="x2")
+```
+
+(c)
+```{r}
+glm.fit=glm(y~x1+x2,family=binomial)
+glm.fit
+```
+
+(d)
+```{r}
+cdata=data.frame(cbind(x1,x2))
+pred.probs=predict(glm.fit,cdata,type="response")
+glm.pred=ifelse(pred.probs>0.5,1,0)
+plot(x1,x2, col=ifelse(glm.pred==0,"red","blue"))
+```
+
+(e)
+```{r}
+glm.fit2=glm(y~I(x1^2)+I(x2^2),family=binomial)
+```
+
+(f)
+```{r}
+dat=data.frame(cbind(x1,x2))
+pred.probs2=predict(glm.fit2,newdata=dat,type="response") 
+glm.pred2=ifelse(pred.probs2>0.5,1,0)
+plot(x1,x2,col=ifelse(glm.pred2==0,"red","blue"))
+table(y,glm.pred2)
+```
+
+(g)
+```{r}
+library(e1071)
+data.x=data.frame(x=cbind(x1,x2),y=as.factor(y))
+set.seed(100)
+tune.out=tune(svm,y~.,data=data.x,kernel="linear",
+              ranges=list(cost=c(0.001,0.01,0.1,1,5,10,100)))
+tune.out
+bestmod=tune.out$best.model
+summary(bestmod)
+plot(bestmod,data.x)
+svm.pred=predict(bestmod,data.x)
+plot(x1,x2,col=ifelse(svm.pred==0,"red","blue"))
+
+```
+
+(h)
+```{r}
+set.seed(1)
+tune.out=tune(svm,y~.,data=data.x,kernel="polynomial",
+              ranges=list(cost=c(0.1,1,10,100,1000),degree=c(0.5,1,2,3,4)))
+ypred=predict(tune.out$best.model,data.x)
+plot(x1,x2,col=ifelse(ypred==0,"red","blue"))
+table(y,ypred)
+
+set.seed(1)
+tune.out=tune(svm,y~.,data=data.x,kernel="polynomial",
+              ranges=list(cost=c(0.1,1,10,100,1000),degree=c(0.5,1,2,3,4)))
+ypred=predict(tune.out$best.model,data.x)
+plot(x1,x2,col=ifelse(ypred==0,"red","blue"))
+table(y,ypred)
+```
+
+(i)
+According to the chuncks above, we can see that logistic method with transformed x and SVM method can give a good result of prediction for the non-linear decision boundary. And the error rates are low. When compared with each other, logistic approach needs us to transform predictor x into different forms, and SVM needs us to tune the cost of funtion. And the tuning of cost is easier than transformation.Besides, we only predict on one data set, which means we need more test data to tune out the model to avoid overfitting.
+
+

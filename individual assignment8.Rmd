@@ -1,0 +1,171 @@
+---
+title: "individual assignment8"
+output:
+  pdf_document: default
+  html_document: default
+---
+Student ID:474084
+Yiqing Zhang
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+8.(d)
+```{r}
+library(ISLR)
+attach(Carseats)
+library(randomForest)
+
+set.seed(1)
+train=sample(1:nrow(Carseats),nrow(Carseats)/2)
+test.x=Carseats[-train,]
+
+set.seed(1)
+bag.car=randomForest(Sales~.,data=Carseats,subset=train,mtry=10,importance=TRUE)
+yhat.bag=predict(bag.car,newdata=test.x)
+mean((yhat.bag-test.x$Sales)^2)
+imp=importance(bag.car)
+imp[which.max(imp)]
+imp
+```
+
+In this chunck, I use the bagging approach. According to the results, we can see that the test MSE is 2.6. And the most important variable is Price, which will decrease MSE the most. Besides, the Shelveloc, CompPrice and Age are also important.
+
+
+8.(e)
+```{r}
+set.seed(1)
+rf.car=randomForest(Sales~.,data=Carseats,subset=train,mtry=4,ntree=25,importance = TRUE)
+yhat.rf=predict(rf.car,newdata=test.x)
+mean((yhat.rf-test.x$Sales)^2)
+importance(rf.car)
+
+set.seed(5)
+mse=matrix(0,1,9,dimnames=list(NULL,paste(1:9)))
+for (i in 1:9){
+  rf.car=randomForest(Sales~.,data=Carseats,subset=train,mtry=i,ntree=25,importance = TRUE)
+  yhat.rf=predict(rf.car,newdata=test.x)
+  mse[1,i]=mean((yhat.rf-test.x$Sales)^2)
+}
+mse
+plot(x=1:9,y=mse,xlab="number of predictors",ylab="Test MSE",type="l")
+```
+
+In this chunck, I use random Forest. When I choose mtry to be 4 randomly, the MSE is 3.06, which is bigger than bagging method. And then I use a for loop to see how will the MSE change while the mtry increases from 1 to 9. We can see that, on this condition, the smallest MSE will be obtained when mtry is 6. The effect of m, which represents the number of variables, is shown by this plot. When m increases from 1 to 2, there is a big drop of MSE. After that, the MSE starts to fluctuate.
+
+
+10.(a)
+```{r}
+attach(Hitters)
+naSalary=is.na(Salary)
+Hitters=Hitters[!naSalary,]
+Hitters[,"Salary"]=log(Hitters$Salary)
+Hitters
+
+
+```
+
+In this chunck, I remove the na values from Salary and log-transform the Salary column.
+
+
+10.(b)
+```{r}
+set.seed(1)
+train_1=sample(1:nrow(Hitters),200)
+train.x1=Hitters[train_1,]
+test.x1=Hitters[-train_1,]
+```
+
+I create the training and test data set.
+
+10.(c)
+```{r}
+library(gbm)
+set.seed(1)
+
+boostmse=c()
+for (a in 1:100){
+  boost.hitt=gbm(Salary~.,train.x1,distribution="gaussian",n.trees=1000,
+                 interaction.depth=2,shrinkage=a*0.01,verbose=F)
+  yhat.boost=predict(boost.hitt,newdata=train.x1,n.trees=1000)
+  boostmse=c(boostmse,mean((yhat.boost-train.x1$Salary)^2))
+}
+boostmse
+s=seq(0.01,1,0.01)
+plot(x=s,y=boostmse,xlab="shrinkage",ylab="Train MSE",type="l")
+```
+
+In this chunck, I use a for loop to show how will the Train MSE change while the shrinkage increases. 
+According to the plot, we can see that when the shrinkage increases, the training MSE decrease.
+
+
+10.(d)
+```{r}
+set.seed(4)
+boost.testmse=c( )
+for (i in 1:100){
+  boost.hitt1=gbm(Salary~.,train.x1,distribution="gaussian",n.trees=1000,
+                 interaction.depth=2,shrinkage=i*0.01,verbose=F)
+  yhat.boost1=predict(boost.hitt1,newdata=test.x1,n.trees=1000)
+  boost.testmse=c(boost.testmse,mean((yhat.boost1-test.x1$Salary)^2))
+}
+boost.testmse
+s=seq(0.01,1,0.01)
+plot(x=s,y=boost.testmse,xlab="shrinkage",ylab="Test MSE",type="l")
+
+```
+
+In this chunck, I use a plot to show visually how the test MSE changes. We can see that, although there are fluctuations, the general trend is that when shrinkage increases, the Test MSE increases. 
+
+
+10.(e)
+```{r}
+#linear regression
+lm.fit=lm(Salary~.,data=train.x1)
+lm.pred=predict(lm.fit,newdata=test.x1)
+mean((lm.pred-test.x1$Salary)^2)
+
+#LASSO
+library(glmnet)
+x = model.matrix(Salary~.,Hitters)[,-1]
+y=Hitters$Salary
+grid=10^seq(10,-2,length=100)
+
+lasso.mod = glmnet(x[train_1,],y[train_1],alpha = 1,lambda = grid)
+set.seed(1)
+cv.lasso=cv.glmnet(x[train_1,],y[train_1],alpha = 1)
+bestlam=cv.lasso$lambda.min
+lasso.pred=predict(lasso.mod,s=bestlam,newx=x[-train_1,])
+mean((lasso.pred-test.x1$Salary)^2)
+
+```
+
+In this chunck, I use linear and LASSO regression. And the Test MSE of these two methods are 0.48 and 0.46 respectively. The MSE are bigger than boosting method, if the shrinakge is small.
+
+
+
+10.(f)
+```{r}
+boost.hitt1=gbm(Salary~.,train.x1,distribution="gaussian",n.trees=1000,
+                 interaction.depth=2,shrinkage=0.01,verbose=F)
+summary(boost.hitt1)
+
+plot(boost.hitt,i="CHits")
+```
+
+According to the picture, we can find the most important predictor is CHits. And the influence of this variable is shown in the plot.
+
+
+
+10.(g)
+```{r}
+library(randomForest)
+set.seed(1)
+bag.hitt=randomForest(Salary~.,data=train.x1,ntree=1000,mtry=19,importance=TRUE)
+yhat.hitt=predict(bag.hitt,test.x1)
+mean((yhat.hitt-test.x1$Salary)^2)
+
+```
+
+According to the results, the test MSE of bagging method is about 0.239.

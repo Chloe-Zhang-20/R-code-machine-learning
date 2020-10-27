@@ -1,0 +1,35 @@
+---
+title: "individual assignment 12"
+output:
+  pdf_document: default
+  html_document: default
+---
+student id: 474084 Yiqing Zhang
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+(a)
+```{r}
+
+library(ISLR)
+attach(USArrests)
+
+pr.out=prcomp(USArrests,scale=TRUE)
+pr.var=pr.out$sdev^2
+pve=pr.var/sum(pr.var)
+pve
+```
+In this chuck, I use prcomp function to get the output and calculate PVE.
+
+```{r}
+rotation=pr.out$rotation
+USArrests_new=as.matrix(scale(USArrests))
+sumvar=sum(apply(USArrests_new^2,2,sum))
+apply((USArrests_new %*% rotation)^2,2,sum)/sumvar
+
+
+
+```
+In this chuck, I apply Equation 10.8 directly to get PVE, which has the same results with the previous method in question a.

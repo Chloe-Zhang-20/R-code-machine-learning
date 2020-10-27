@@ -1,0 +1,87 @@
+---
+title: "Untitled"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#10(f)
+library(ISLR)
+attach(Weekly)
+?Weekly
+dim(Weekly)
+na.omit(Weekly)
+
+train=(Year<2009)
+test=Weekly[!train,]
+dim(test)
+
+library(MASS)
+qda.fit=qda(Direction~Lag2,subset=train)
+qda.pred=predict(qda.fit,test)
+
+table(qda.pred$class,test$Direction)
+mean(qda.pred$class==test$Direction)
+```
+According to the results, the correct rate is about 58.65%.
+
+```{r}
+#8(a)
+set.seed(1)
+x=rnorm(100)
+y=x-2*x^2+rnorm(100)
+
+```
+n is y and p is x, the equation is y=x-2*x^2+error.
+
+```{r}
+#11.(b)
+plot(x,y,xlab="X",ylab="Y")
+```
+According to the plot, I find there is a non-linear relationship between x and y. Before the point near 0 and 1, y will increase with x increasing; and after that point, y will decrease with x increasing.
+
+```{r}
+#11(c)
+library(boot)
+newdata=data.frame(x,y)
+
+set.seed(50)
+cv.error=rep(0,4)
+
+for(i in 1:4){
+  glm.fit=glm(y~poly(x,i),data=newdata)
+  cv.error[i]=cv.glm(newdata,glm.fit)$delta[1]
+}
+
+cv.error
+```
+The LOOCV error is 7.2881616,0.9374236,0.9566218,0.9539049.
+
+```{r}
+set.seed(100)
+cv.error1=rep(0,4)
+
+for(i in 1:4){
+  glm.fit=glm(y~poly(x,i),data=newdata)
+  cv.error1[i]=cv.glm(newdata,glm.fit)$delta[1]
+}
+
+cv.error1
+```
+The LOOCV error does not change. Because LOOCV error is the average of all the error on every observation. So if the dataset does not change, the LOOCV error is the only one and will not change.
+```{r}
+plot(1:4,cv.error,xlab="degree",ylab="LOOCV MSE",type="l")
+
+```
+It is the second one, which is Y = β0 + β1X + β2X2 + error, that has the smallest error.
+According to the plot below, we can see that there is a dramatic drop of LOOCV MSE when degree changes from 1 to 2, but the MSE does not change much with degree keeping increasing from 2. It is same with my expectation. Because when degree is 2 and more, the model is more non-linear which fits better to the equation, but the increasing degrees will not influence the MSE much.
+
+```{r}
+summary(glm.fit)
+```
+According to the results of the summary function, we can see that it is consistent with the conclusions to some extent. Only the predictor degree up to 2 is statistically significant. When the degree increases to 3 and 4, it is no longer significant. When the predictor is only x, it is significant, but in the analysis before, the LOOCV MSE is high.
